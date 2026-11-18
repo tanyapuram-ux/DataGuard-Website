@@ -1,0 +1,763 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f8fc">
+  <meta name="description" content="DataGuard private AI workspace and protection dashboard.">
+  <title>DataGuard — Workspace</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17243a;
+      --muted: #718096;
+      --dim: #94a1b3;
+      --blue: #2867f5;
+      --blue-dark: #1b53d4;
+      --blue-soft: #edf4ff;
+      --line: #e4eaf2;
+      --canvas: #f5f8fc;
+      --green: #15956d;
+      --green-soft: #e8f8f1;
+      --amber: #bd7d13;
+      --amber-soft: #fff5df;
+      --red: #d34d55;
+      --red-soft: #fff0f0;
+      --sidebar-width: 258px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    * { box-sizing: border-box; }
+    body { min-width: 320px; min-height: 100vh; margin: 0; color: var(--ink); background: var(--canvas); font-size: 13px; }
+    button, input, textarea { font: inherit; }
+    button { color: inherit; }
+    svg { display: block; }
+    .icon { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+    .app-shell { min-height: 100vh; }
+
+    .sidebar {
+      position: fixed;
+      z-index: 20;
+      inset: 0 auto 0 0;
+      display: flex;
+      width: var(--sidebar-width);
+      flex-direction: column;
+      border-right: 1px solid var(--line);
+      background: #fff;
+    }
+    .brand { display: flex; height: 68px; flex: 0 0 auto; align-items: center; gap: 11px; padding: 0 22px; border-bottom: 1px solid #edf0f5; color: var(--ink); font-size: 17px; font-weight: 750; letter-spacing: -.045em; }
+    .brand-mark { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 9px; color: #fff; background: linear-gradient(145deg, #367dff, #2458e8); box-shadow: 0 4px 10px rgba(40,103,245,.2); }
+    .brand-mark .icon { width: 19px; height: 19px; stroke-width: 1.9; }
+    .brand-word span { color: var(--blue); }
+    .sidebar-scroll { flex: 1; overflow-y: auto; padding: 14px 12px 18px; scrollbar-width: thin; }
+    .nav-group { margin: 0 0 13px; }
+    .group-heading { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px 6px; color: #94a0b0; font-size: 10px; font-weight: 700; letter-spacing: .075em; text-transform: uppercase; }
+    .nav-link { display: flex; min-height: 36px; align-items: center; gap: 11px; margin: 2px 0; padding: 0 10px; border: 0; border-radius: 7px; color: #5e6c80; background: transparent; cursor: pointer; text-align: left; transition: background .16s ease, color .16s ease; width: 100%; }
+    .nav-link:hover { color: var(--blue); background: #f5f8ff; }
+    .nav-link.active { color: var(--blue); background: #edf4ff; font-weight: 650; }
+    .nav-link .icon { width: 16px; height: 16px; flex: 0 0 auto; color: #7e8ba0; }
+    .nav-link.active .icon { color: var(--blue); }
+    .nav-link .nav-count { margin-left: auto; padding: 2px 6px; border-radius: 10px; color: #b34a50; background: var(--red-soft); font-size: 10px; font-weight: 700; }
+    .sidebar-profile { display: flex; min-height: 76px; align-items: center; gap: 10px; padding: 13px 17px; border-top: 1px solid var(--line); background: #fff; }
+    .avatar { display: grid; width: 36px; height: 36px; flex: 0 0 auto; place-items: center; border-radius: 50%; color: #fff; background: linear-gradient(145deg, #cb5ad7, #8b5cf6); font-size: 12px; font-weight: 750; }
+    .profile-copy { min-width: 0; flex: 1; }
+    .profile-copy strong, .profile-copy small { display: block; }
+    .profile-copy strong { overflow: hidden; color: var(--ink); font-size: 12px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+    .profile-copy small { margin-top: 3px; color: var(--muted); font-size: 10px; }
+    .profile-menu { border: 0; color: #8c98a9; background: transparent; cursor: pointer; }
+
+    .main { min-height: 100vh; margin-left: var(--sidebar-width); }
+    .topbar { position: sticky; z-index: 10; top: 0; display: flex; height: 68px; align-items: center; justify-content: space-between; gap: 20px; padding: 0 32px; border-bottom: 1px solid var(--line); background: rgba(255,255,255,.94); backdrop-filter: blur(12px); }
+    .topbar-left, .topbar-actions { display: flex; align-items: center; gap: 15px; }
+    .mobile-menu { display: none; width: 36px; height: 36px; align-items: center; justify-content: center; border: 1px solid var(--line); border-radius: 8px; background: white; cursor: pointer; }
+    .workspace-switcher { display: flex; align-items: center; gap: 9px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+    .workspace-dot { width: 9px; height: 9px; border-radius: 3px; background: var(--blue); }
+    .workspace-switcher strong { font-size: 11px; font-weight: 650; }
+    .workspace-switcher .icon { width: 13px; height: 13px; color: #8491a4; }
+    .search { display: flex; width: min(250px, 30vw); height: 36px; align-items: center; gap: 8px; padding: 0 10px; border: 1px solid var(--line); border-radius: 8px; color: #8995a7; background: #fff; }
+    .search .icon { width: 15px; height: 15px; flex: 0 0 auto; }
+    .search input { width: 100%; min-width: 0; border: 0; outline: 0; color: var(--ink); background: transparent; font-size: 11px; }
+    .search input::placeholder { color: #9aa5b4; }
+    .icon-button { position: relative; display: grid; width: 36px; height: 36px; place-items: center; border: 1px solid var(--line); border-radius: 8px; color: #718096; background: #fff; cursor: pointer; }
+    .icon-button:hover { color: var(--blue); border-color: #cbd9f3; }
+    .notification-dot { position: absolute; top: 7px; right: 7px; width: 7px; height: 7px; border: 1px solid white; border-radius: 50%; background: #f05b63; }
+    .topbar-avatar { width: 31px; height: 31px; font-size: 10px; }
+    .content { width: min(1540px, 100%); margin: 0 auto; padding: 29px 32px 38px; }
+    .page-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; margin-bottom: 23px; }
+    .page-heading h1 { margin: 0; font-size: 22px; font-weight: 720; letter-spacing: -.04em; }
+    .page-heading p { margin: 6px 0 0; color: var(--muted); font-size: 12px; }
+    .heading-actions { display: flex; align-items: center; gap: 9px; }
+    .button { display: inline-flex; min-height: 36px; align-items: center; justify-content: center; gap: 8px; padding: 0 13px; border: 1px solid var(--line); border-radius: 7px; color: #536177; background: #fff; cursor: pointer; font-size: 11px; font-weight: 600; transition: background .16s ease, border-color .16s ease, transform .16s ease; }
+    .button:hover { border-color: #cbd8ef; background: #f9fbff; }
+    .button.primary { border-color: var(--blue); color: #fff; background: var(--blue); box-shadow: 0 3px 8px rgba(40,103,245,.15); }
+    .button.primary:hover { border-color: var(--blue-dark); background: var(--blue-dark); transform: translateY(-1px); }
+    .button .icon { width: 15px; height: 15px; }
+    .button.compact { min-height: 32px; padding: 0 10px; font-size: 10px; }
+
+    .view { display: none; }
+    .view.active { display: block; animation: enter .2s ease-out; }
+    @keyframes enter { from { opacity: .7; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+    .stats-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 13px; margin-bottom: 17px; }
+    .stat-card, .panel { border: 1px solid var(--line); border-radius: 10px; background: #fff; box-shadow: 0 1px 2px rgba(28,47,78,.025); }
+    .stat-card { min-height: 119px; padding: 16px 17px; }
+    .stat-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .stat-icon { display: grid; width: 31px; height: 31px; place-items: center; border-radius: 8px; color: var(--blue); background: #f1f6ff; }
+    .stat-icon .icon { width: 16px; height: 16px; }
+    .trend { display: inline-flex; align-items: center; gap: 3px; padding: 4px 6px; border-radius: 20px; color: var(--green); background: var(--green-soft); font-size: 9px; font-weight: 700; }
+    .trend.warning { color: var(--amber); background: var(--amber-soft); }
+    .stat-label { margin-top: 13px; color: var(--muted); font-size: 10px; font-weight: 550; }
+    .stat-value { display: flex; align-items: baseline; gap: 7px; margin-top: 4px; font-size: 21px; font-weight: 720; letter-spacing: -.04em; }
+    .stat-value small { color: var(--muted); font-size: 10px; font-weight: 500; letter-spacing: 0; }
+    .dashboard-grid { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(300px, .92fr); gap: 14px; align-items: stretch; margin-bottom: 16px; }
+    .panel-heading { display: flex; min-height: 58px; align-items: center; justify-content: space-between; gap: 12px; padding: 0 17px; border-bottom: 1px solid #edf0f5; }
+    .panel-title { margin: 0; font-size: 12px; font-weight: 680; }
+    .panel-subtitle { margin: 4px 0 0; color: var(--muted); font-size: 10px; }
+    .panel-body { padding: 17px; }
+    .usage-panel { min-height: 302px; }
+    .chart-legend { display: flex; align-items: center; gap: 6px; color: #728096; font-size: 9px; }
+    .legend-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--blue); }
+    .chart-wrap { position: relative; height: 172px; margin: 2px 0 0; }
+    .chart-wrap svg { width: 100%; height: 100%; overflow: visible; }
+    .chart-gridline { stroke: #edf1f7; stroke-width: 1; }
+    .chart-area { fill: url(#chartFill); }
+    .chart-line { fill: none; stroke: #3478f6; stroke-width: 2.4; vector-effect: non-scaling-stroke; }
+    .chart-point { fill: #fff; stroke: #3478f6; stroke-width: 2; vector-effect: non-scaling-stroke; }
+    .chart-label { fill: #8c98a9; font-size: 9px; }
+    .chart-footer { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 13px; padding-top: 13px; border-top: 1px solid #edf0f5; }
+    .chart-footer span { display: block; color: var(--muted); font-size: 9px; }
+    .chart-footer strong { display: block; margin-top: 5px; font-size: 12px; font-weight: 680; }
+    .alerts-panel { min-height: 302px; }
+    .alerts-list { display: grid; gap: 8px; }
+    .alert-row { display: grid; grid-template-columns: 29px minmax(0, 1fr) auto; align-items: start; gap: 9px; padding: 10px; border: 1px solid #e8edf4; border-radius: 8px; }
+    .alert-icon { display: grid; width: 26px; height: 26px; place-items: center; border-radius: 7px; color: var(--amber); background: var(--amber-soft); }
+    .alert-icon .icon { width: 14px; height: 14px; }
+    .alert-icon.green { color: var(--green); background: var(--green-soft); }
+    .alert-icon.blue { color: var(--blue); background: var(--blue-soft); }
+    .alert-copy strong { display: block; font-size: 10px; font-weight: 650; }
+    .alert-copy p { margin: 4px 0 0; color: #718096; font-size: 9px; line-height: 1.45; }
+    .alert-copy time { display: block; margin-top: 5px; color: #9aa5b4; font-size: 8px; }
+    .text-action { padding: 3px 0; border: 0; color: var(--blue); background: none; cursor: pointer; font-size: 9px; font-weight: 600; }
+    .text-action:hover { text-decoration: underline; }
+    .full-link { display: block; width: 100%; margin-top: 9px; padding: 8px; border: 1px solid #d6e3ff; border-radius: 7px; color: var(--blue); background: #fff; cursor: pointer; font-size: 9px; font-weight: 600; }
+    .full-link:hover { background: #f5f8ff; }
+    .activity-panel { overflow: hidden; }
+    .table-scroll { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th { height: 37px; padding: 0 15px; border-bottom: 1px solid #e9edf4; color: #778499; background: #fbfcfe; font-size: 9px; font-weight: 650; white-space: nowrap; }
+    td { height: 51px; padding: 8px 15px; border-bottom: 1px solid #eef1f5; color: #526177; font-size: 10px; white-space: nowrap; }
+    tbody tr:last-child td { border-bottom: 0; }
+    .activity-name { display: flex; align-items: center; gap: 9px; color: var(--ink); font-weight: 600; }
+    .file-icon { display: grid; width: 27px; height: 27px; place-items: center; border: 1px solid #e8edf4; border-radius: 7px; color: #78889f; background: #fbfcfe; }
+    .file-icon .icon { width: 14px; height: 14px; }
+    .table-secondary { display: block; margin-top: 3px; color: #8b97a8; font-size: 9px; font-weight: 450; }
+    .status { display: inline-flex; align-items: center; gap: 5px; padding: 4px 7px; border-radius: 12px; color: var(--green); background: var(--green-soft); font-size: 9px; font-weight: 600; }
+    .status::before { width: 5px; height: 5px; border-radius: 50%; background: currentColor; content: ""; }
+    .status.review { color: var(--amber); background: var(--amber-soft); }
+    .status.blocked { color: var(--red); background: var(--red-soft); }
+    .subtle-link { display: inline-flex; align-items: center; gap: 4px; border: 0; color: var(--blue); background: none; cursor: pointer; font-size: 10px; font-weight: 600; }
+    .subtle-link:hover { text-decoration: underline; }
+    .bottom-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 14px; margin-top: 16px; }
+    .health-row { display: flex; align-items: center; gap: 12px; padding: 13px 0; border-bottom: 1px solid #edf0f5; }
+    .health-row:last-child { padding-bottom: 0; border: 0; }
+    .health-check { display: grid; width: 25px; height: 25px; place-items: center; border-radius: 50%; color: var(--green); background: var(--green-soft); }
+    .health-check .icon { width: 13px; height: 13px; }
+    .health-copy { flex: 1; }
+    .health-copy strong { display: block; font-size: 10px; font-weight: 620; }
+    .health-copy small { display: block; margin-top: 3px; color: var(--muted); font-size: 9px; }
+    .health-state { color: var(--green); font-size: 9px; font-weight: 600; }
+    .quick-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 9px; }
+    .quick-action { display: flex; min-height: 62px; align-items: center; gap: 10px; padding: 10px; border: 1px solid #e9edf4; border-radius: 8px; background: white; cursor: pointer; text-align: left; }
+    .quick-action:hover { border-color: #cadafb; background: #fbfcff; }
+    .quick-action .stat-icon { width: 29px; height: 29px; }
+    .quick-action strong { display: block; font-size: 10px; font-weight: 620; }
+    .quick-action small { display: block; margin-top: 3px; color: var(--muted); font-size: 9px; }
+
+    .tools-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin: 18px 0 14px; }
+    .tool-filters { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tool-filter { min-height: 30px; padding: 0 10px; border: 1px solid transparent; border-radius: 7px; color: #748197; background: transparent; cursor: pointer; font-size: 10px; font-weight: 600; }
+    .tool-filter:hover { color: var(--blue); background: #f0f5ff; }
+    .tool-filter.active { border-color: #dce7ff; color: var(--blue); background: #edf4ff; }
+    .tool-search { display: flex; width: min(230px, 30vw); height: 34px; align-items: center; gap: 7px; padding: 0 9px; border: 1px solid var(--line); border-radius: 7px; color: #8995a7; background: #fff; }
+    .tool-search .icon { width: 14px; height: 14px; flex: 0 0 auto; }
+    .tool-search input { width: 100%; min-width: 0; border: 0; outline: 0; color: var(--ink); background: transparent; font-size: 10px; }
+    .tool-search input::placeholder { color: #9aa5b4; }
+    .tools-count { margin: 0 0 10px; color: var(--muted); font-size: 10px; }
+    .tools-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 13px; }
+    .tool-card { display: flex; min-height: 190px; flex-direction: column; align-items: flex-start; padding: 17px; border: 1px solid var(--line); border-radius: 10px; background: #fff; box-shadow: 0 1px 2px rgba(28,47,78,.025); }
+    .tool-card[hidden] { display: none; }
+    .tool-card .stat-icon { width: 36px; height: 36px; }
+    .tool-category { margin: 11px 0 0; color: var(--blue); font-size: 9px; font-weight: 650; }
+    .tool-card h2 { margin: 5px 0 6px; font-size: 12px; font-weight: 680; }
+    .tool-card p { flex: 1; margin: 0 0 12px; color: var(--muted); font-size: 10px; line-height: 1.6; }
+    .tool-card .button { min-height: 32px; }
+
+    .page-panel { padding: 20px; }
+    .section-heading { margin: 0 0 16px; font-size: 14px; font-weight: 680; letter-spacing: -.02em; }
+    .section-copy { margin: -9px 0 18px; color: var(--muted); font-size: 11px; line-height: 1.6; }
+    .chat-shell { display: flex; min-height: 470px; flex-direction: column; }
+    .chat-context { display: flex; align-items: center; gap: 8px; padding: 12px 15px; border-bottom: 1px solid #edf0f5; color: #67758a; font-size: 10px; }
+    .secure-pill { display: inline-flex; align-items: center; gap: 5px; margin-left: auto; padding: 5px 8px; border-radius: 12px; color: var(--green); background: var(--green-soft); font-size: 9px; font-weight: 600; }
+    .secure-pill .icon { width: 12px; height: 12px; }
+    .chat-thread { display: flex; flex: 1; flex-direction: column; gap: 16px; padding: 22px max(5%, 20px); }
+    .chat-bubble { max-width: min(620px, 85%); padding: 13px 15px; border: 1px solid #e9edf4; border-radius: 10px; color: #526177; background: #fff; font-size: 11px; line-height: 1.7; }
+    .chat-bubble.user { align-self: flex-end; border-color: #d9e6ff; color: #27426f; background: #f1f6ff; }
+    .chat-bubble strong { display: block; margin-bottom: 5px; color: var(--ink); font-size: 10px; }
+    .source-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .source-tag { display: inline-flex; align-items: center; gap: 5px; padding: 5px 7px; border: 1px solid #e7edf5; border-radius: 5px; color: #718096; background: #fff; font-size: 9px; }
+    .source-tag .icon { width: 12px; height: 12px; }
+    .chat-composer { display: flex; align-items: flex-end; gap: 10px; margin: 0 18px 17px; padding: 10px; border: 1px solid #dfe6f0; border-radius: 9px; background: #fff; box-shadow: 0 2px 6px rgba(30,53,85,.035); }
+    .chat-composer textarea { min-height: 41px; max-height: 120px; flex: 1; resize: vertical; padding: 10px 5px; border: 0; outline: 0; color: var(--ink); background: transparent; font-size: 11px; }
+    .chat-composer textarea::placeholder { color: #9aa5b4; }
+    .send-button { display: grid; width: 34px; height: 34px; flex: 0 0 auto; place-items: center; border: 0; border-radius: 7px; color: #fff; background: var(--blue); cursor: pointer; }
+    .send-button:hover { background: var(--blue-dark); }
+    .send-button .icon { width: 16px; height: 16px; }
+    .sources-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 14px; }
+    .source-name { display: flex; align-items: center; gap: 10px; color: var(--ink); font-weight: 620; }
+    .source-name .file-icon { width: 31px; height: 31px; color: var(--blue); background: #f3f7ff; }
+    .policy-list { display: grid; gap: 10px; }
+    .policy-row { display: flex; align-items: center; gap: 13px; padding: 14px; border: 1px solid #e9edf4; border-radius: 9px; }
+    .policy-copy { min-width: 0; flex: 1; }
+    .policy-copy strong { display: block; font-size: 11px; font-weight: 650; }
+    .policy-copy p { margin: 5px 0 0; color: var(--muted); font-size: 10px; line-height: 1.5; }
+    .toggle { position: relative; width: 36px; height: 21px; flex: 0 0 auto; padding: 0; border: 0; border-radius: 12px; background: #cbd3df; cursor: pointer; transition: background .16s ease; }
+    .toggle::after { position: absolute; top: 3px; left: 3px; width: 15px; height: 15px; border-radius: 50%; background: white; box-shadow: 0 1px 2px rgba(0,0,0,.15); content: ""; transition: transform .16s ease; }
+    .toggle[aria-pressed="true"] { background: var(--blue); }
+    .toggle[aria-pressed="true"]::after { transform: translateX(15px); }
+    .settings-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(260px, .9fr); gap: 14px; }
+    .setting-field { display: grid; gap: 6px; margin: 15px 0; }
+    .setting-field label { color: #627087; font-size: 10px; font-weight: 600; }
+    .setting-field input, .setting-field select { width: 100%; height: 37px; padding: 0 10px; border: 1px solid #e2e8f0; border-radius: 7px; outline: 0; color: var(--ink); background: white; font-size: 11px; }
+    .setting-field input:focus, .setting-field select:focus { border-color: #96b5ff; box-shadow: 0 0 0 3px rgba(40,103,245,.08); }
+    .toast { position: fixed; z-index: 40; right: 22px; bottom: 20px; display: flex; align-items: center; gap: 9px; max-width: calc(100vw - 32px); padding: 12px 15px; border: 1px solid #dce8df; border-radius: 9px; color: #266b51; background: white; box-shadow: 0 8px 30px rgba(26,44,74,.12); font-size: 11px; opacity: 0; pointer-events: none; transform: translateY(8px); transition: opacity .2s ease, transform .2s ease; }
+    .toast.show { opacity: 1; transform: none; }
+    .toast .icon { width: 16px; height: 16px; color: var(--green); }
+    .overlay { display: none; }
+
+    @media (min-width: 1500px) {
+      .content { padding-right: 40px; padding-left: 40px; }
+      .stat-card { min-height: 126px; }
+    }
+    @media (max-width: 1100px) {
+      :root { --sidebar-width: 235px; }
+      .topbar { padding: 0 22px; }
+      .content { padding: 24px 22px 32px; }
+      .dashboard-grid { grid-template-columns: minmax(0, 1.4fr) minmax(270px, .9fr); }
+      .stats-grid { gap: 10px; }
+      .stat-card { padding: 14px; }
+    }
+    @media (max-width: 860px) {
+      .sidebar { width: 260px; transform: translateX(-101%); transition: transform .22s ease; box-shadow: 12px 0 35px rgba(24,43,76,.08); }
+      .sidebar.open { transform: translateX(0); }
+      .overlay { position: fixed; z-index: 19; inset: 0; background: rgba(18,31,53,.28); }
+      .overlay.open { display: block; }
+      .main { margin-left: 0; }
+      .mobile-menu { display: flex; }
+      .topbar { height: 62px; padding: 0 18px; }
+      .content { padding: 23px 18px 30px; }
+      .dashboard-grid { grid-template-columns: 1fr; }
+      .alerts-panel { min-height: auto; }
+      .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 580px) {
+      .topbar { gap: 9px; padding: 0 12px; }
+      .topbar-left, .topbar-actions { gap: 8px; }
+      .workspace-switcher { display: none; }
+      .search { width: min(190px, 44vw); }
+      .search input { font-size: 10px; }
+      .topbar-actions > .profile-copy { display: none; }
+      .content { padding: 20px 13px 25px; }
+      .page-heading { flex-direction: column; align-items: stretch; margin-bottom: 17px; }
+      .page-heading h1 { font-size: 20px; }
+      .heading-actions { justify-content: flex-start; }
+      .stats-grid { gap: 9px; }
+      .stat-card { min-height: 108px; padding: 12px; }
+      .stat-value { font-size: 19px; }
+      .dashboard-grid { gap: 10px; }
+      .panel-heading { padding: 0 13px; }
+      .panel-body { padding: 13px; }
+      .chart-wrap { height: 145px; }
+      .chart-footer { gap: 7px; }
+      .chart-footer strong { font-size: 11px; }
+      .bottom-grid, .settings-grid { grid-template-columns: 1fr; gap: 10px; }
+      .tools-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+      .tools-toolbar { align-items: stretch; flex-direction: column-reverse; }
+      .tool-search { width: 100%; }
+      .tool-filters { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 3px; }
+      .tool-filter { flex: 0 0 auto; }
+      .tool-card { min-height: 190px; padding: 13px; }
+      .quick-grid { gap: 7px; }
+      .quick-action { gap: 7px; padding: 8px; }
+      th, td { padding-right: 11px; padding-left: 11px; }
+      .page-panel { padding: 15px; }
+      .chat-thread { padding: 18px 12px; }
+      .chat-bubble { max-width: 94%; }
+      .chat-composer { margin-right: 10px; margin-left: 10px; }
+      .sources-toolbar { align-items: flex-start; flex-direction: column; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <svg aria-hidden="true" width="0" height="0" style="position:absolute">
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 20 6v5.5c0 5.2-3.4 8.5-8 9.8-4.6-1.3-8-4.6-8-9.8V6l8-3Z"/><path d="m8.8 12.1 2.1 2.1 4.5-4.6"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 19V5m0 14h17"/><path d="m7 15 4-4 3 2 6-7"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3.5 2"/></symbol>
+    <symbol id="i-zap" viewBox="0 0 24 24"><path d="m13 2-9 12h7l-1 8 10-13h-7l1-7Z"/></symbol>
+    <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 5h16v12H9l-5 3V5Z"/><path d="M8 9h8M8 13h5"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3.5 6.5h6l2 2H21v10H3.5z"/><path d="M3.5 8.5V5h6l2 2"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v2"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></symbol>
+    <symbol id="i-plug" viewBox="0 0 24 24"><path d="M8 4v5m8-5v5M6 9h12v2a6 6 0 0 1-12 0V9Zm6 8v4"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="m19.4 15 .1.1 1.4 1.1-1.4 2.4-1.7-.7a8 8 0 0 1-1.8 1l-.3 1.8h-2.8l-.3-1.8a8 8 0 0 1-1.8-1l-1.7.7-1.4-2.4 1.4-1.1a7 7 0 0 1 0-2l-1.4-1.1 1.4-2.4 1.7.7a8 8 0 0 1 1.8-1l.3-1.8h2.8l.3 1.8a8 8 0 0 1 1.8 1l1.7-.7 1.4 2.4-1.4 1.1a7 7 0 0 1 0 2Z" transform="translate(-1 -1) scale(.96)"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4 4"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m8 10 4 4 4-4"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-arrow-up" viewBox="0 0 24 24"><path d="M7 17 17 7M7 7h10v10"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M6 3.5h8l4 4V20H6z"/><path d="M14 3.5V8h4M9 13h6m-6 3h6"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.3 4.6 3.8 16a2 2 0 0 0 1.8 3h12.8a2 2 0 0 0 1.8-3L13.7 4.6a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4m0 3h.01"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0m2-9a3 3 0 1 0 0-6m1 9a5 5 0 0 1 3 4.5"/></symbol>
+    <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="m11 12 8-8 2 2-2 2 2 2-3 3-2-2-3 3"/></symbol>
+    <symbol id="i-send" viewBox="0 0 24 24"><path d="m21 3-7.5 18-3.2-7.3L3 10.5 21 3Z"/><path d="M10.3 13.7 15 9"/></symbol>
+    <symbol id="i-filter" viewBox="0 0 24 24"><path d="M4 5h16l-6 7v6l-4 2v-8L4 5Z"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18m0-18a14 14 0 0 0 0 18"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></symbol>
+  </svg>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Workspace navigation">
+      <a class="brand" href="#" aria-label="DataGuard workspace home">
+        <span class="brand-mark"><svg class="icon"><use href="#i-shield"/></svg></span>
+        <span class="brand-word">Data<span>Guard</span></span>
+      </a>
+      <nav class="sidebar-scroll">
+        <div class="nav-group">
+          <div class="group-heading">Workspace</div>
+          <button class="nav-link active" type="button" data-view="dashboard"><svg class="icon"><use href="#i-grid"/></svg>Overview</button>
+          <button class="nav-link" type="button" data-view="analytics"><svg class="icon"><use href="#i-chart"/></svg>Analytics</button>
+          <button class="nav-link" type="button" data-view="activity"><svg class="icon"><use href="#i-clock"/></svg>Recent activity</button>
+          <button class="nav-link" type="button" data-view="workspace"><svg class="icon"><use href="#i-zap"/></svg>Quick actions</button>
+        </div>
+        <div class="nav-group">
+          <div class="group-heading">AI workspace</div>
+          <button class="nav-link" type="button" data-view="workspace"><svg class="icon"><use href="#i-chat"/></svg>New chat</button>
+          <button class="nav-link" type="button" data-view="chattools"><svg class="icon"><use href="#i-zap"/></svg>Chat tools</button>
+          <button class="nav-link" type="button" data-view="sources"><svg class="icon"><use href="#i-book"/></svg>Knowledge sources</button>
+        </div>
+        <div class="nav-group">
+          <div class="group-heading">Data protection</div>
+          <button class="nav-link" type="button" data-view="protection"><svg class="icon"><use href="#i-shield"/></svg>Protection policies</button>
+          <button class="nav-link" type="button" data-view="protection"><svg class="icon"><use href="#i-alert"/></svg>DLP events<span class="nav-count">3</span></button>
+          <button class="nav-link" type="button" data-view="activity"><svg class="icon"><use href="#i-file"/></svg>Audit log</button>
+        </div>
+        <div class="nav-group">
+          <div class="group-heading">Manage</div>
+          <button class="nav-link" type="button" data-view="integrations"><svg class="icon"><use href="#i-plug"/></svg>Integrations</button>
+          <button class="nav-link" type="button" data-view="settings"><svg class="icon"><use href="#i-users"/></svg>Team &amp; access</button>
+          <button class="nav-link" type="button" data-view="settings"><svg class="icon"><use href="#i-settings"/></svg>Settings</button>
+        </div>
+      </nav>
+      <div class="sidebar-profile">
+        <span class="avatar" aria-hidden="true">TP</span>
+        <span class="profile-copy"><strong>Tanya Puram</strong><small>Pro plan · Workspace admin</small></span>
+        <button class="profile-menu" type="button" data-view="settings" aria-label="Open account settings"><svg class="icon"><use href="#i-chevron"/></svg></button>
+      </div>
+    </aside>
+    <button class="overlay" id="overlay" type="button" aria-label="Close navigation"></button>
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="mobile-menu" id="menuToggle" type="button" aria-label="Open navigation" aria-expanded="false"><svg class="icon"><use href="#i-grid"/></svg></button>
+          <button class="workspace-switcher" type="button" aria-label="Current workspace: Puram Studio">
+            <span class="workspace-dot"></span><strong>Puram Studio</strong><svg class="icon"><use href="#i-chevron"/></svg>
+          </button>
+          <label class="search"><svg class="icon"><use href="#i-search"/></svg><input id="globalSearch" type="search" placeholder="Search activity..." aria-label="Search activity"></label>
+        </div>
+        <div class="topbar-actions">
+          <button class="icon-button" id="notificationButton" type="button" aria-label="Notifications"><svg class="icon"><use href="#i-bell"/></svg><span class="notification-dot"></span></button>
+          <span class="avatar topbar-avatar" aria-hidden="true">TP</span>
+        </div>
+      </header>
+      <div class="content">
+        <div class="page-heading">
+          <div><h1 id="pageTitle">Good morning, Tanya</h1><p id="pageSubtitle">Here’s your workspace at a glance.</p></div>
+          <div class="heading-actions" id="headingActions">
+            <button class="button" id="dateButton" type="button"><svg class="icon"><use href="#i-clock"/></svg>Last 7 days<svg class="icon"><use href="#i-chevron"/></svg></button>
+            <button class="button primary" type="button" data-go="workspace"><svg class="icon"><use href="#i-plus"/></svg>New chat</button>
+          </div>
+        </div>
+
+        <section class="view active" id="view-dashboard" aria-label="Dashboard overview">
+          <div class="stats-grid">
+            <article class="stat-card"><div class="stat-top"><span class="stat-icon"><svg class="icon"><use href="#i-chat"/></svg></span><span class="trend">↗ 12.5%</span></div><div class="stat-label">AI conversations</div><div class="stat-value">1,284 <small>this month</small></div></article>
+            <article class="stat-card"><div class="stat-top"><span class="stat-icon"><svg class="icon"><use href="#i-shield"/></svg></span><span class="trend">↗ 8.3%</span></div><div class="stat-label">Prompts protected</div><div class="stat-value">8,492 <small>this month</small></div></article>
+            <article class="stat-card"><div class="stat-top"><span class="stat-icon"><svg class="icon"><use href="#i-book"/></svg></span><span class="trend">↗ 4.2%</span></div><div class="stat-label">Knowledge sources</div><div class="stat-value">24 <small>connected</small></div></article>
+            <article class="stat-card"><div class="stat-top"><span class="stat-icon"><svg class="icon"><use href="#i-alert"/></svg></span><span class="trend warning">3 need review</span></div><div class="stat-label">Protection events</div><div class="stat-value">17 <small>this week</small></div></article>
+          </div>
+
+          <div class="dashboard-grid">
+            <section class="panel usage-panel">
+              <div class="panel-heading">
+                <div><h2 class="panel-title">Workspace usage</h2><p class="panel-subtitle">AI conversations over the last 7 months</p></div>
+                <div class="chart-legend"><span class="legend-dot"></span>Conversations</div>
+              </div>
+              <div class="panel-body">
+                <div class="chart-wrap" role="img" aria-label="Conversation usage trend rising from January through July">
+                  <svg viewBox="0 0 720 190" preserveAspectRatio="none">
+                    <defs><linearGradient id="chartFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#4f86ff" stop-opacity=".16"/><stop offset="1" stop-color="#4f86ff" stop-opacity="0"/></linearGradient></defs>
+                    <line class="chart-gridline" x1="42" y1="20" x2="710" y2="20"/><line class="chart-gridline" x1="42" y1="58" x2="710" y2="58"/><line class="chart-gridline" x1="42" y1="96" x2="710" y2="96"/><line class="chart-gridline" x1="42" y1="134" x2="710" y2="134"/><line class="chart-gridline" x1="42" y1="172" x2="710" y2="172"/>
+                    <text class="chart-label" x="0" y="23">1.6k</text><text class="chart-label" x="4" y="61">1.2k</text><text class="chart-label" x="10" y="99">800</text><text class="chart-label" x="10" y="137">400</text><text class="chart-label" x="21" y="175">0</text>
+                    <path class="chart-area" d="M48 143 C84 136 106 128 148 126 S230 112 260 107 S344 93 372 89 S454 71 484 67 S566 51 596 47 S670 32 704 26 L704 172 L48 172 Z"/>
+                    <path class="chart-line" d="M48 143 C84 136 106 128 148 126 S230 112 260 107 S344 93 372 89 S454 71 484 67 S566 51 596 47 S670 32 704 26"/>
+                    <circle class="chart-point" cx="48" cy="143" r="3.5"/><circle class="chart-point" cx="148" cy="126" r="3.5"/><circle class="chart-point" cx="260" cy="107" r="3.5"/><circle class="chart-point" cx="372" cy="89" r="3.5"/><circle class="chart-point" cx="484" cy="67" r="3.5"/><circle class="chart-point" cx="596" cy="47" r="3.5"/><circle class="chart-point" cx="704" cy="26" r="3.5"/>
+                    <text class="chart-label" x="42" y="187">Jan</text><text class="chart-label" x="142" y="187">Feb</text><text class="chart-label" x="254" y="187">Mar</text><text class="chart-label" x="366" y="187">Apr</text><text class="chart-label" x="478" y="187">May</text><text class="chart-label" x="590" y="187">Jun</text><text class="chart-label" x="695" y="187">Jul</text>
+                  </svg>
+                </div>
+                <div class="chart-footer"><div><span>This week</span><strong>+187 conversations</strong></div><div><span>Avg. response time</span><strong>2.3 seconds</strong></div><div><span>Protection rate</span><strong>99.8%</strong></div></div>
+              </div>
+            </section>
+            <section class="panel alerts-panel">
+              <div class="panel-heading"><div><h2 class="panel-title">Protection activity</h2><p class="panel-subtitle">Recent events from your workspace</p></div><button class="text-action" type="button" data-go="protection">View all</button></div>
+              <div class="panel-body">
+                <div class="alerts-list">
+                  <article class="alert-row"><span class="alert-icon"><svg class="icon"><use href="#i-alert"/></svg></span><div class="alert-copy"><strong>Sensitive data detected</strong><p>A prompt containing customer account details was redacted.</p><time>5 minutes ago · AI Workspace</time></div><button class="text-action" type="button" data-go="protection">Review</button></article>
+                  <article class="alert-row"><span class="alert-icon green"><svg class="icon"><use href="#i-check"/></svg></span><div class="alert-copy"><strong>Policy check passed</strong><p>Business account opening procedure referenced safely.</p><time>28 minutes ago · AI Workspace</time></div></article>
+                  <article class="alert-row"><span class="alert-icon blue"><svg class="icon"><use href="#i-book"/></svg></span><div class="alert-copy"><strong>Knowledge source synced</strong><p>Retail banking operations manual is up to date.</p><time>1 hour ago · Knowledge sources</time></div><button class="text-action" type="button" data-go="sources">View</button></article>
+                </div>
+                <button class="full-link" type="button" data-go="protection">View protection events (17)</button>
+              </div>
+            </section>
+          </div>
+
+          <section class="panel activity-panel">
+            <div class="panel-heading"><div><h2 class="panel-title">Recent activity</h2><p class="panel-subtitle">A live view of work in your DataGuard workspace</p></div><button class="text-action" type="button" data-go="activity">View activity log&nbsp; →</button></div>
+            <div class="table-scroll">
+              <table class="searchable-table">
+                <thead><tr><th>ACTIVITY</th><th>AREA</th><th>STATUS</th><th>TIME</th><th></th></tr></thead>
+                <tbody>
+                  <tr><td><span class="activity-name"><span class="file-icon"><svg class="icon"><use href="#i-chat"/></svg></span><span>Asked about business account opening<span class="table-secondary">Tanya Puram · AI conversation</span></span></span></td><td>AI workspace</td><td><span class="status">Protected</span></td><td>5 min ago</td><td><button class="text-action" type="button" data-go="workspace">Open</button></td></tr>
+                  <tr><td><span class="activity-name"><span class="file-icon"><svg class="icon"><use href="#i-book"/></svg></span><span>Branch operations manual synced<span class="table-secondary">Knowledge source · Google Drive</span></span></span></td><td>Knowledge</td><td><span class="status">Completed</span></td><td>1 hr ago</td><td><button class="text-action" type="button" data-go="sources">View</button></td></tr>
+                  <tr><td><span class="activity-name"><span class="file-icon"><svg class="icon"><use href="#i-shield"/></svg></span><span>Customer account details redacted<span class="table-secondary">DLP policy · Prompt protection</span></span></span></td><td>Protection</td><td><span class="status review">Reviewed</span></td><td>Today, 9:42 AM</td><td><button class="text-action" type="button" data-go="protection">Details</button></td></tr>
+                  <tr><td><span class="activity-name"><span class="file-icon"><svg class="icon"><use href="#i-users"/></svg></span><span>Workspace health check<span class="table-secondary">All connected services operating normally</span></span></span></td><td>System</td><td><span class="status">Healthy</span></td><td>Today, 8:16 AM</td><td><button class="text-action" type="button" data-go="activity">Details</button></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+          <div class="bottom-grid">
+            <section class="panel"><div class="panel-heading"><div><h2 class="panel-title">Workspace health</h2><p class="panel-subtitle">Your AI environment is up to date</p></div><span class="status">All systems healthy</span></div><div class="panel-body"><div class="health-row"><span class="health-check"><svg class="icon"><use href="#i-check"/></svg></span><span class="health-copy"><strong>AI protection</strong><small>Prompt and response checks are active</small></span><span class="health-state">Active</span></div><div class="health-row"><span class="health-check"><svg class="icon"><use href="#i-check"/></svg></span><span class="health-copy"><strong>Knowledge sync</strong><small>24 sources · last synced 12 min ago</small></span><span class="health-state">Synced</span></div><div class="health-row"><span class="health-check"><svg class="icon"><use href="#i-check"/></svg></span><span class="health-copy"><strong>Audit logging</strong><small>Workspace activity is being recorded</small></span><span class="health-state">On</span></div></div></section>
+            <section class="panel"><div class="panel-heading"><div><h2 class="panel-title">Quick actions</h2><p class="panel-subtitle">Jump back into your work</p></div></div><div class="panel-body"><div class="quick-grid"><button class="quick-action" type="button" data-go="workspace"><span class="stat-icon"><svg class="icon"><use href="#i-chat"/></svg></span><span><strong>Ask DataGuard AI</strong><small>Start a private chat</small></span></button><button class="quick-action" type="button" data-go="sources"><span class="stat-icon"><svg class="icon"><use href="#i-plus"/></svg></span><span><strong>Add knowledge</strong><small>Connect a source</small></span></button><button class="quick-action" type="button" data-go="protection"><span class="stat-icon"><svg class="icon"><use href="#i-shield"/></svg></span><span><strong>Review policies</strong><small>Manage protection</small></span></button><button class="quick-action" type="button" data-go="analytics"><span class="stat-icon"><svg class="icon"><use href="#i-chart"/></svg></span><span><strong>See analytics</strong><small>Explore workspace use</small></span></button></div></div></section>
+          </div>
+        </section>
+
+        <section class="view" id="view-workspace" aria-label="AI workspace">
+          <section class="panel chat-shell">
+            <div class="chat-context"><svg class="icon"><use href="#i-book"/></svg><span id="chatToolContext">Company knowledge assistant</span><span class="secure-pill"><svg class="icon"><use href="#i-lock"/></svg>Private &amp; protected</span></div>
+            <div class="chat-thread" id="chatThread" aria-live="polite">
+              <div class="chat-bubble user">What steps are in our business account opening process?</div>
+              <div class="chat-bubble"><strong>DataGuard AI</strong>The internal procedure starts with the account application, required identity and business documentation, and the applicable review steps. Check the linked procedure for the current checklist and route exceptions through your bank’s established process.<div class="source-tags"><span class="source-tag"><svg class="icon"><use href="#i-file"/></svg>Business Account Opening Procedures</span><span class="source-tag"><svg class="icon"><use href="#i-file"/></svg>Branch Operations Manual</span></div></div>
+            </div>
+            <form class="chat-composer" id="chatForm"><textarea id="chatInput" aria-label="Message DataGuard AI" placeholder="Ask anything about your work..." rows="1"></textarea><button class="send-button" type="submit" aria-label="Send message"><svg class="icon"><use href="#i-send"/></svg></button></form>
+          </section>
+          <p class="section-copy" style="margin:10px 4px 0">DataGuard AI uses your connected knowledge sources and applies your workspace protection policies to every conversation.</p>
+        </section>
+
+        <section class="view" id="view-chattools" aria-label="Chat tools">
+          <p class="section-copy">Choose a focused assistant for the task at hand. Every tool works inside your private DataGuard workspace and follows its protection policies.</p>
+          <div class="tools-toolbar">
+            <div class="tool-filters" role="group" aria-label="Filter chat tools">
+              <button class="tool-filter active" type="button" data-tool-filter="all" aria-pressed="true">All tools</button>
+              <button class="tool-filter" type="button" data-tool-filter="knowledge" aria-pressed="false">Knowledge</button>
+              <button class="tool-filter" type="button" data-tool-filter="writing" aria-pressed="false">Writing</button>
+              <button class="tool-filter" type="button" data-tool-filter="analysis" aria-pressed="false">Analysis</button>
+              <button class="tool-filter" type="button" data-tool-filter="security" aria-pressed="false">Security</button>
+              <button class="tool-filter" type="button" data-tool-filter="productivity" aria-pressed="false">Productivity</button>
+              <button class="tool-filter" type="button" data-tool-filter="developer" aria-pressed="false">Developer</button>
+            </div>
+            <label class="tool-search"><svg class="icon"><use href="#i-search"/></svg><input id="toolSearch" type="search" placeholder="Find a tool..." aria-label="Find a chat tool"></label>
+          </div>
+          <p class="tools-count" id="toolsCount" aria-live="polite">19 tools</p>
+          <div class="tools-grid">
+            <article class="tool-card" data-category="knowledge"><span class="stat-icon"><svg class="icon"><use href="#i-book"/></svg></span><span class="tool-category">KNOWLEDGE</span><h2>Knowledge assistant</h2><p>Ask about internal banking procedures and products, with answers linked to approved sources.</p><button class="button" type="button" data-tool="Knowledge assistant">Open tool <svg class="icon"><use href="#i-arrow-up"/></svg></button></article>
+            <article class="tool-card" data-category="knowledge"><span class="stat-icon"><svg class="icon"><use href="#i-file"/></svg></span><span class="tool-category">KNOWLEDGE</span><h2>Document reviewer</h2><p>Summarize operational documents and locate key details while respecting access controls.</p><button class="button" type="button" data-tool="Document reviewer">Open tool <svg class="icon"><use href="#i-arrow-up"/></svg></button></article>
+            <article class="tool-card" data-category="knowledge"><span class="stat-icon"><svg class="icon"><use href="#i-search"/></svg></span><span class="tool-category">KNOWLEDGE</span><h2>Research assistant</h2><p>Gather approved internal guidance and organize findings with source references.</p><button class="button" type="button" data-tool="Research assistant">Open tool <svg class="icon"><use href="#i-arrow-up"/></svg></button></article>
+            <article class="tool-card" data-category="knowledge"><span class="stat-icon"><svg class="icon"><use href="#i-folder"/></svg></span><span class="tool-category">KNOWLEDGE</span><h2>Meeting notes finder</h2><p>Find branch and business meetings’ decisions, owners, and follow-up actions.</p><button class="button" type="button" data-tool="Meeting notes finder">Open tool <svg class="icon"><use href="#i-arrow-up"/></svg></button></article>
+            <article class="tool-card" data-category="knowledge"><span class="stat-icon"><svg class="icon"><use href="#i-users"/></svg></span><span class="tool-category">KNOWLEDGE</span><h2>Customer insights</h2><p>Find authorized customer-service context without exposing unnecessary account details.</p><button class="button" type="button" data-tool="Customer insights">Open tool <svg class="icon"><use href="#i-arrow-up"/></svg></button></article>
+            <article class="tool-card" data-category="writing"><span class="stat-icon"><svg class="icon"><use href="#i-zap"/></svg></span><span class="tool-category">WRITING</span><h2>Writing assistant</h2><p>Draft clear internal or customer-facing messages using approved banking guidance.</p><button class="button" type="button" data-tool="Writing assistant">Open tool <svg class="icon"><use href="#i-arrow-up"/></svg></button></article>
+            <article class="tool-card" data-category="writing"><span class="stat-icon"><svg class="icon"><use href="#i-chat"/></svg></span><span class="tool-category">WRITING</span><h2>Email composer</h2><p>Turn key points into clear service emails for customers or colleagues.</p><button class="button" type="button" data-tool="Email composer">Open tool <svg class="icon"><use href="#i-arrow-up"/></svg></button></article>
+            <article class="tool-card" data-category="writing"><span class="stat-icon"><svg class="icon"><use href="#i-file"/></svg></span><span class="tool-category">WRITING</span><h2>Executive brief writer</h2><p>Condense operational updates and project details into decision-ready briefs.</p><button class="button" type="button" data-tool="Executive brief writer">Open tool <svg class="icon"><use href="#i-arrow-up"/></svg></button></article>
+            <article class="tool-card" data-category="writing"><span class="stat-icon"><svg class="icon"><use href="#i-book"/></svg></span><span class="tool-category">WRITING</span><h2>Content editor</h2><p>Improve clarity and readability in customer service and internal communications.</p><button class="button" type="button" data-tool="Content editor">Open tool <svg class="icon"><use href="#i-arrow-up"/></svg></button></article>
+            <article class="tool-card" data-category="analysis"><span class="stat-icon"><svg class="icon"><use href="#i-chart"/></svg></span><span class="tool-category">ANALYSIS</span><h2>Data analyst</h2><p>Explore approved operational data and explain aggregate service trends.</p><button class="button" type="button" data-tool="Data analyst">Open tool <svg class="icon"><use href="#i-arrow-up"/></svg></button></article>
+            <article class="tool-card" data-category="analysis"><span class="stat-icon"><svg class="icon"><use href="#i-grid"/></svg></span><span class="tool-category">ANALYSIS</span><h2>Spreadsheet helper</h2><p>Summarize operational reports and assist with spreadsheet formulas and data.</p><button class="button" type="button" data-tool="Spreadsheet helper">Open tool <svg class="icon"><use href="#i-arrow-up"/></svg></button></article>
+            <article class="tool-card" data-category="analysis"><span class="stat-icon"><svg class="icon"><use href="#i-chart"/></svg></span><span class="tool-category">ANALYSIS</span><h2>Trend spotter</h2><p>Compare service and operations reports to highlight changes and outliers.</p><button class="button" type="button" data-tool="Trend spotter">Open tool <svg class="icon"><use href="#i-arrow-up"/></svg></button></article>
+            <article class="tool-card" data-category="analysis"><span class="stat-icon"><svg class="icon"><use href="#i-zap"/></svg></span><span class="tool-category">ANALYSIS</span><h2>Decision analyst</h2><p>Compare operational scenarios and organize evidence, tradeoffs, and next steps.</p><button class="button" type="button" data-tool="Decision analyst">Open tool <svg class="icon"><use href="#i-arrow-up"/></svg></button></article>
+            <article class="tool-card" data-category="security"><span class="stat-icon"><svg class="icon"><use href="#i-shield"/></svg></span><span class="tool-category">SECURITY</span><h2>Policy &amp; compliance</h2><p>Find internal banking policies and procedures; confirm interpretations through established channels.</p><button class="button" type="button" data-tool="Policy &amp; compliance">Open tool <svg class="icon"><use href="#i-arrow-up"/></svg></button></article>
+            <article class="tool-card" data-category="security"><span class="stat-icon"><svg class="icon"><use href="#i-lock"/></svg></span><span class="tool-category">SECURITY</span><h2>Privacy checker</h2><p>Check text for customer identifiers, account details, and other sensitive information.</p><button class="button" type="button" data-tool="Privacy checker">Open tool <svg class="icon"><use href="#i-arrow-up"/></svg></button></article>
+            <article class="tool-card" data-category="productivity"><span class="stat-icon"><svg class="icon"><use href="#i-chat"/></svg></span><span class="tool-category">PRODUCTIVITY</span><h2>Brainstorming partner</h2><p>Explore ideas for improving branch service, internal workflows, and team collaboration.</p><button class="button" type="button" data-tool="Brainstorming partner">Open tool <svg class="icon"><use href="#i-arrow-up"/></svg></button></article>
+            <article class="tool-card" data-category="productivity"><span class="stat-icon"><svg class="icon"><use href="#i-check"/></svg></span><span class="tool-category">PRODUCTIVITY</span><h2>Project planner</h2><p>Plan operational initiatives with milestones, owners, dependencies, and risks.</p><button class="button" type="button" data-tool="Project planner">Open tool <svg class="icon"><use href="#i-arrow-up"/></svg></button></article>
+            <article class="tool-card" data-category="productivity"><span class="stat-icon"><svg class="icon"><use href="#i-clock"/></svg></span><span class="tool-category">PRODUCTIVITY</span><h2>Task prioritizer</h2><p>Prioritize service and operations work by urgency, impact, and dependencies.</p><button class="button" type="button" data-tool="Task prioritizer">Open tool <svg class="icon"><use href="#i-arrow-up"/></svg></button></article>
+            <article class="tool-card" data-category="developer"><span class="stat-icon"><svg class="icon"><use href="#i-file"/></svg></span><span class="tool-category">DEVELOPER</span><h2>Code explainer</h2><p>Explain internal banking-system code and technical documents using approved sources.</p><button class="button" type="button" data-tool="Code explainer">Open tool <svg class="icon"><use href="#i-arrow-up"/></svg></button></article>
+          </div>
+          <p class="section-copy" id="noToolsMessage" hidden>No tools match that search. Try another name or category.</p>
+          </div>
+        </section>
+
+        <section class="view" id="view-sources" aria-label="Knowledge sources">
+          <section class="panel page-panel">
+            <div class="sources-toolbar"><div><h2 class="section-heading" style="margin-bottom:5px">Connected knowledge</h2><p class="section-copy" style="margin:0">Your company sources make answers more useful and grounded.</p></div><div><input id="fileInput" type="file" multiple hidden><button class="button primary" id="uploadButton" type="button"><svg class="icon"><use href="#i-plus"/></svg>Add a source</button></div></div>
+            <div class="table-scroll"><table><thead><tr><th>KNOWLEDGE SOURCE</th><th>TYPE</th><th>DOCUMENTS</th><th>LAST SYNCED</th><th>STATUS</th></tr></thead><tbody id="sourceRows">
+              <tr><td><span class="source-name"><span class="file-icon"><svg class="icon"><use href="#i-folder"/></svg></span><span>Retail Banking Operations Manual<span class="table-secondary">Google Drive</span></span></span></td><td>Shared drive</td><td>82 files</td><td>12 min ago</td><td><span class="status">Synced</span></td></tr>
+              <tr><td><span class="source-name"><span class="file-icon"><svg class="icon"><use href="#i-file"/></svg></span><span>Business Account Opening Procedures<span class="table-secondary">Notion</span></span></span></td><td>Knowledge base</td><td>34 pages</td><td>28 min ago</td><td><span class="status">Synced</span></td></tr>
+              <tr><td><span class="source-name"><span class="file-icon"><svg class="icon"><use href="#i-folder"/></svg></span><span>Digital Banking Product Guide<span class="table-secondary">SharePoint</span></span></span></td><td>Team site</td><td>126 files</td><td>Today, 9:08 AM</td><td><span class="status">Synced</span></td></tr>
+              <tr><td><span class="source-name"><span class="file-icon"><svg class="icon"><use href="#i-file"/></svg></span><span>Branch Service Playbook<span class="table-secondary">Uploaded by Tanya Puram</span></span></span></td><td>Documents</td><td>18 files</td><td>Yesterday</td><td><span class="status review">Syncing</span></td></tr>
+            </tbody></table></div>
+          </section>
+          <div class="bottom-grid"><section class="panel page-panel"><h2 class="section-heading">Grounded answers</h2><p class="section-copy">DataGuard AI searches only the sources your team has connected and can access. Answers include references so your team can verify the information.</p><div class="health-row"><span class="health-check"><svg class="icon"><use href="#i-check"/></svg></span><span class="health-copy"><strong>24 sources connected</strong><small>260 documents indexed</small></span><span class="health-state">Ready</span></div></section><section class="panel page-panel"><h2 class="section-heading">Keep knowledge current</h2><p class="section-copy">Connected sources sync automatically. New files can be uploaded here and added to your workspace knowledge.</p><button class="button" type="button" id="uploadButtonSecondary"><svg class="icon"><use href="#i-plus"/></svg>Upload files</button></section></div>
+        </section>
+
+        <section class="view" id="view-protection" aria-label="Data protection">
+          <section class="panel page-panel"><h2 class="section-heading">Protection policies</h2><p class="section-copy">Choose how DataGuard handles sensitive information in prompts and AI responses.</p><div class="policy-list">
+            <div class="policy-row"><span class="stat-icon"><svg class="icon"><use href="#i-user"/></svg></span><span class="policy-copy"><strong>Personal information</strong><p>Detect and redact customer and employee identifiers, including account-related details, before they reach an AI provider.</p></span><button class="toggle" type="button" aria-label="Toggle personal information policy" aria-pressed="true"></button></div>
+            <div class="policy-row"><span class="stat-icon"><svg class="icon"><use href="#i-key"/></svg></span><span class="policy-copy"><strong>Credentials and secrets</strong><p>Block passwords, access tokens, and other authentication secrets in prompts and responses.</p></span><button class="toggle" type="button" aria-label="Toggle credentials and secrets policy" aria-pressed="true"></button></div>
+            <div class="policy-row"><span class="stat-icon"><svg class="icon"><use href="#i-file"/></svg></span><span class="policy-copy"><strong>Confidential company data</strong><p>Apply workspace rules to internal banking documents and sensitive operational information.</p></span><button class="toggle" type="button" aria-label="Toggle confidential company data policy" aria-pressed="true"></button></div>
+            <div class="policy-row"><span class="stat-icon"><svg class="icon"><use href="#i-globe"/></svg></span><span class="policy-copy"><strong>Unapproved AI destinations</strong><p>Keep customer and bank information within your approved AI workspace.</p></span><button class="toggle" type="button" aria-label="Toggle unapproved AI destinations policy" aria-pressed="true"></button></div>
+          </div></section>
+          <section class="panel activity-panel" style="margin-top:14px"><div class="panel-heading"><div><h2 class="panel-title">Events to review</h2><p class="panel-subtitle">Recent DataGuard policy decisions</p></div><button class="button compact" type="button" data-go="activity"><svg class="icon"><use href="#i-filter"/></svg>Audit log</button></div><div class="table-scroll"><table><thead><tr><th>EVENT</th><th>POLICY</th><th>ACTION</th><th>TIME</th></tr></thead><tbody><tr><td>Customer account details detected in prompt</td><td>Personal information</td><td><span class="status review">Redacted</span></td><td>5 min ago</td></tr><tr><td>Banking procedure source referenced</td><td>Knowledge grounding</td><td><span class="status">Allowed</span></td><td>28 min ago</td></tr><tr><td>Authentication secret detected</td><td>Credentials and secrets</td><td><span class="status blocked">Blocked</span></td><td>Today, 8:51 AM</td></tr></tbody></table></div></section>
+        </section>
+
+        <section class="view" id="view-activity" aria-label="Activity log">
+          <section class="panel activity-panel"><div class="panel-heading"><div><h2 class="panel-title">Workspace activity</h2><p class="panel-subtitle">Recent AI, knowledge, and protection events</p></div><button class="button compact" type="button" id="exportButton"><svg class="icon"><use href="#i-arrow-up"/></svg>Export log</button></div><div class="table-scroll"><table class="searchable-table"><thead><tr><th>ACTIVITY</th><th>AREA</th><th>STATUS</th><th>TIME</th><th>ACTOR</th></tr></thead><tbody><tr><td>Asked about business account opening</td><td>AI workspace</td><td><span class="status">Protected</span></td><td>5 min ago</td><td>Tanya Puram</td></tr><tr><td>Branch operations manual synced</td><td>Knowledge</td><td><span class="status">Completed</span></td><td>1 hr ago</td><td>DataGuard</td></tr><tr><td>Customer account details redacted</td><td>Protection</td><td><span class="status review">Reviewed</span></td><td>Today, 9:42 AM</td><td>Tanya Puram</td></tr><tr><td>Workspace health check</td><td>System</td><td><span class="status">Healthy</span></td><td>Today, 8:16 AM</td><td>DataGuard</td></tr><tr><td>Authentication secret blocked</td><td>Protection</td><td><span class="status blocked">Blocked</span></td><td>Today, 8:02 AM</td><td>DataGuard</td></tr><tr><td>Business account procedures synced</td><td>Knowledge</td><td><span class="status">Completed</span></td><td>Yesterday</td><td>DataGuard</td></tr></tbody></table></div></section>
+          <div class="bottom-grid"><section class="panel page-panel"><h2 class="section-heading">Audit-ready by default</h2><p class="section-copy">Workspace actions and policy decisions are recorded in your activity log so your team can review how DataGuard is being used.</p><div class="health-row"><span class="health-check"><svg class="icon"><use href="#i-check"/></svg></span><span class="health-copy"><strong>Audit logging enabled</strong><small>Events retained for your Pro plan</small></span><span class="health-state">On</span></div></section><section class="panel page-panel"><h2 class="section-heading">Need a closer look?</h2><p class="section-copy">Use the search field above to filter activity by person, source, status, or action.</p></section></div>
+        </section>
+
+        <section class="view" id="view-analytics" aria-label="Workspace analytics">
+          <div class="stats-grid"><article class="stat-card"><div class="stat-top"><span class="stat-icon"><svg class="icon"><use href="#i-chat"/></svg></span><span class="trend">↗ 12.5%</span></div><div class="stat-label">Conversations</div><div class="stat-value">1,284 <small>this month</small></div></article><article class="stat-card"><div class="stat-top"><span class="stat-icon"><svg class="icon"><use href="#i-users"/></svg></span><span class="trend">↗ 6.1%</span></div><div class="stat-label">Active teammates</div><div class="stat-value">18 <small>of 25 seats</small></div></article><article class="stat-card"><div class="stat-top"><span class="stat-icon"><svg class="icon"><use href="#i-shield"/></svg></span><span class="trend">99.8%</span></div><div class="stat-label">Protected prompts</div><div class="stat-value">8,492 <small>this month</small></div></article><article class="stat-card"><div class="stat-top"><span class="stat-icon"><svg class="icon"><use href="#i-clock"/></svg></span><span class="trend">↘ 0.4 sec</span></div><div class="stat-label">Avg. response time</div><div class="stat-value">2.3 sec <small>this month</small></div></article></div>
+          <section class="panel usage-panel"><div class="panel-heading"><div><h2 class="panel-title">AI workspace usage</h2><p class="panel-subtitle">Conversation volume, January–July</p></div><div class="chart-legend"><span class="legend-dot"></span>Conversations</div></div><div class="panel-body"><div class="chart-wrap" role="img" aria-label="Conversation usage trend rising from January through July"><svg viewBox="0 0 720 190" preserveAspectRatio="none"><defs><linearGradient id="chartFillAnalytics" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#4f86ff" stop-opacity=".16"/><stop offset="1" stop-color="#4f86ff" stop-opacity="0"/></linearGradient></defs><line class="chart-gridline" x1="42" y1="20" x2="710" y2="20"/><line class="chart-gridline" x1="42" y1="58" x2="710" y2="58"/><line class="chart-gridline" x1="42" y1="96" x2="710" y2="96"/><line class="chart-gridline" x1="42" y1="134" x2="710" y2="134"/><line class="chart-gridline" x1="42" y1="172" x2="710" y2="172"/><path fill="url(#chartFillAnalytics)" d="M48 143 C84 136 106 128 148 126 S230 112 260 107 S344 93 372 89 S454 71 484 67 S566 51 596 47 S670 32 704 26 L704 172 L48 172 Z"/><path class="chart-line" d="M48 143 C84 136 106 128 148 126 S230 112 260 107 S344 93 372 89 S454 71 484 67 S566 51 596 47 S670 32 704 26"/><circle class="chart-point" cx="48" cy="143" r="3.5"/><circle class="chart-point" cx="148" cy="126" r="3.5"/><circle class="chart-point" cx="260" cy="107" r="3.5"/><circle class="chart-point" cx="372" cy="89" r="3.5"/><circle class="chart-point" cx="484" cy="67" r="3.5"/><circle class="chart-point" cx="596" cy="47" r="3.5"/><circle class="chart-point" cx="704" cy="26" r="3.5"/><text class="chart-label" x="42" y="187">Jan</text><text class="chart-label" x="142" y="187">Feb</text><text class="chart-label" x="254" y="187">Mar</text><text class="chart-label" x="366" y="187">Apr</text><text class="chart-label" x="478" y="187">May</text><text class="chart-label" x="590" y="187">Jun</text><text class="chart-label" x="695" y="187">Jul</text></svg></div><div class="chart-footer"><div><span>This week</span><strong>+187 conversations</strong></div><div><span>Avg. response time</span><strong>2.3 seconds</strong></div><div><span>Protection rate</span><strong>99.8%</strong></div></div></div></section>
+          <section class="panel activity-panel" style="margin-top:14px"><div class="panel-heading"><div><h2 class="panel-title">Top knowledge sources</h2><p class="panel-subtitle">Most referenced in AI conversations</p></div><button class="text-action" type="button" data-go="sources">Manage sources →</button></div><div class="table-scroll"><table><thead><tr><th>KNOWLEDGE SOURCE</th><th>REFERENCES</th><th>LAST USED</th><th>STATUS</th></tr></thead><tbody><tr><td>Retail Banking Operations Manual</td><td>248</td><td>5 min ago</td><td><span class="status">Synced</span></td></tr><tr><td>Business Account Opening Procedures</td><td>194</td><td>28 min ago</td><td><span class="status">Synced</span></td></tr><tr><td>Digital Banking Product Guide</td><td>157</td><td>1 hr ago</td><td><span class="status">Synced</span></td></tr></tbody></table></div></section>
+        </section>
+
+        <section class="view" id="view-integrations" aria-label="Integrations">
+          <div class="bottom-grid" style="margin-top:0">
+            <section class="panel page-panel"><span class="stat-icon"><svg class="icon"><use href="#i-folder"/></svg></span><h2 class="section-heading" style="margin-top:14px">Google Drive</h2><p class="section-copy">Bring shared documents into your private company knowledge base.</p><div class="health-row"><span class="health-check"><svg class="icon"><use href="#i-check"/></svg></span><span class="health-copy"><strong>Connected</strong><small>Last synced 12 minutes ago</small></span><span class="health-state">Active</span></div><button class="button" type="button" style="margin-top:14px" data-notice="Google Drive integration settings are ready to configure.">Manage integration</button></section>
+            <section class="panel page-panel"><span class="stat-icon"><svg class="icon"><use href="#i-book"/></svg></span><h2 class="section-heading" style="margin-top:14px">Notion</h2><p class="section-copy">Ground DataGuard AI responses in your team’s Notion knowledge base.</p><div class="health-row"><span class="health-check"><svg class="icon"><use href="#i-check"/></svg></span><span class="health-copy"><strong>Connected</strong><small>Last synced 28 minutes ago</small></span><span class="health-state">Active</span></div><button class="button" type="button" style="margin-top:14px" data-notice="Notion integration settings are ready to configure.">Manage integration</button></section>
+            <section class="panel page-panel"><span class="stat-icon"><svg class="icon"><use href="#i-folder"/></svg></span><h2 class="section-heading" style="margin-top:14px">SharePoint</h2><p class="section-copy">Search approved team sites and documents in your private workspace.</p><div class="health-row"><span class="health-check"><svg class="icon"><use href="#i-check"/></svg></span><span class="health-copy"><strong>Connected</strong><small>Last synced today at 9:08 AM</small></span><span class="health-state">Active</span></div><button class="button" type="button" style="margin-top:14px" data-notice="SharePoint integration settings are ready to configure.">Manage integration</button></section>
+            <section class="panel page-panel"><span class="stat-icon"><svg class="icon"><use href="#i-plug"/></svg></span><h2 class="section-heading" style="margin-top:14px">Connect another source</h2><p class="section-copy">Add approved company knowledge to help your team get more grounded answers.</p><button class="button primary" style="margin-top:14px" type="button" data-go="sources"><svg class="icon"><use href="#i-plus"/></svg>Browse sources</button></section>
+          </div>
+        </section>
+
+        <section class="view" id="view-settings" aria-label="Workspace settings">
+          <div class="settings-grid">
+            <section class="panel page-panel"><h2 class="section-heading">Workspace profile</h2><p class="section-copy">Manage your workspace details and account preferences.</p><form id="settingsForm"><div class="setting-field"><label for="profileName">Your name</label><input id="profileName" value="Tanya Puram"></div><div class="setting-field"><label for="workspaceName">Workspace name</label><input id="workspaceName" value="Puram Studio"></div><div class="setting-field"><label for="profileEmail">Email address</label><input id="profileEmail" type="email" value="tanya@puram.studio"></div><div class="setting-field"><label for="timezone">Time zone</label><select id="timezone"><option>Eastern Time (US &amp; Canada)</option><option>Pacific Time (US &amp; Canada)</option><option>Coordinated Universal Time</option></select></div><button class="button primary" type="submit">Save changes</button></form></section>
+            <div>
+              <section class="panel page-panel"><h2 class="section-heading">Plan &amp; usage</h2><p class="section-copy">Your workspace is on the DataGuard Pro plan.</p><div class="health-row"><span class="health-copy"><strong>Team seats</strong><small>18 of 25 seats in use</small></span><span class="health-state">72%</span></div><div class="health-row"><span class="health-copy"><strong>Monthly AI usage</strong><small>1,284 of 5,000 conversations</small></span><span class="health-state">26%</span></div><button class="button" type="button" style="margin-top:16px" data-notice="Your Pro plan is active.">Manage subscription</button></section>
+              <section class="panel page-panel" style="margin-top:14px"><h2 class="section-heading">Security</h2><p class="section-copy">Workspace access and protection settings.</p><div class="health-row"><span class="health-check"><svg class="icon"><use href="#i-check"/></svg></span><span class="health-copy"><strong>Multi-factor authentication</strong><small>Extra sign-in protection enabled</small></span><span class="health-state">On</span></div><div class="health-row"><span class="health-check"><svg class="icon"><use href="#i-check"/></svg></span><span class="health-copy"><strong>Workspace protection</strong><small>Policies apply to every conversation</small></span><span class="health-state">On</span></div></section>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"><svg class="icon"><use href="#i-check"/></svg><span id="toastMessage">Done.</span></div>
+  <script>
+    const views = {
+      dashboard: ["Good morning, Tanya", "Here’s your workspace at a glance."],
+      workspace: ["AI workspace", "Ask a question using your private company knowledge."],
+      chattools: ["Chat tools", "Choose a focused assistant for the task at hand."],
+      sources: ["Knowledge sources", "Connect, upload, and manage the information behind your AI."],
+      protection: ["Data protection", "Manage policies that keep company information safe."],
+      activity: ["Activity log", "Review recent AI workspace and protection events."],
+      analytics: ["Workspace analytics", "Understand how your team uses private AI."],
+      integrations: ["Integrations", "Manage the services connected to your DataGuard workspace."],
+      settings: ["Workspace settings", "Manage your workspace, plan, and security preferences."]
+    };
+    const viewsById = Object.keys(views);
+    const navLinks = document.querySelectorAll(".nav-link");
+    const pageTitle = document.getElementById("pageTitle");
+    const pageSubtitle = document.getElementById("pageSubtitle");
+    const headingActions = document.getElementById("headingActions");
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("overlay");
+    const menuToggle = document.getElementById("menuToggle");
+    const toast = document.getElementById("toast");
+    const toastMessage = document.getElementById("toastMessage");
+    const chatToolContext = document.getElementById("chatToolContext");
+    let toastTimer;
+    let activeChatTool = "Knowledge assistant";
+
+    function showToast(message) {
+      toastMessage.textContent = message;
+      toast.classList.add("show");
+      window.clearTimeout(toastTimer);
+      toastTimer = window.setTimeout(() => toast.classList.remove("show"), 2600);
+    }
+
+    function closeMobileNav() {
+      sidebar.classList.remove("open");
+      overlay.classList.remove("open");
+      menuToggle.setAttribute("aria-expanded", "false");
+    }
+
+    function showView(name, selectedLink) {
+      const viewName = views[name] ? name : "dashboard";
+      document.querySelectorAll(".view").forEach((view) => view.classList.toggle("active", view.id === `view-${viewName}`));
+      const activeLink = selectedLink || Array.from(navLinks).find((link) => link.dataset.view === viewName);
+      navLinks.forEach((link) => link.classList.toggle("active", link === activeLink));
+      pageTitle.textContent = views[viewName][0];
+      pageSubtitle.textContent = views[viewName][1];
+      headingActions.hidden = viewName === "workspace";
+      document.title = `${views[viewName][0]} — DataGuard`;
+      closeMobileNav();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    navLinks.forEach((link) => link.addEventListener("click", () => showView(link.dataset.view, link)));
+    document.querySelectorAll("[data-go]").forEach((button) => button.addEventListener("click", () => showView(button.dataset.go)));
+    document.querySelectorAll("[data-tool]").forEach((button) => button.addEventListener("click", () => {
+      activeChatTool = button.dataset.tool;
+      chatToolContext.textContent = activeChatTool;
+      showView("workspace");
+    }));
+    let activeToolCategory = "all";
+    const toolCards = Array.from(document.querySelectorAll(".tool-card"));
+    const toolFilters = document.querySelectorAll("[data-tool-filter]");
+    const toolSearch = document.getElementById("toolSearch");
+    const toolsCount = document.getElementById("toolsCount");
+    const noToolsMessage = document.getElementById("noToolsMessage");
+    function filterTools() {
+      const query = toolSearch.value.trim().toLowerCase();
+      let visibleCount = 0;
+      toolCards.forEach((card) => {
+        const categoryMatches = activeToolCategory === "all" || card.dataset.category === activeToolCategory;
+        const queryMatches = !query || card.textContent.toLowerCase().includes(query);
+        const visible = categoryMatches && queryMatches;
+        card.hidden = !visible;
+        if (visible) visibleCount += 1;
+      });
+      toolsCount.textContent = `${visibleCount} ${visibleCount === 1 ? "tool" : "tools"}`;
+      noToolsMessage.hidden = visibleCount > 0;
+    }
+    toolFilters.forEach((filter) => filter.addEventListener("click", () => {
+      activeToolCategory = filter.dataset.toolFilter;
+      toolFilters.forEach((item) => {
+        const selected = item === filter;
+        item.classList.toggle("active", selected);
+        item.setAttribute("aria-pressed", String(selected));
+      });
+      filterTools();
+    }));
+    toolSearch.addEventListener("input", filterTools);
+    document.querySelectorAll("[data-view]").forEach((button) => {
+      if (!button.classList.contains("nav-link")) button.addEventListener("click", () => showView(button.dataset.view));
+    });
+    menuToggle.addEventListener("click", () => {
+      const open = !sidebar.classList.contains("open");
+      sidebar.classList.toggle("open", open);
+      overlay.classList.toggle("open", open);
+      menuToggle.setAttribute("aria-expanded", String(open));
+    });
+    overlay.addEventListener("click", closeMobileNav);
+    document.getElementById("notificationButton").addEventListener("click", () => showView("protection"));
+    document.getElementById("dateButton").addEventListener("click", () => showToast("Showing workspace activity from the last 7 days."));
+
+    const globalSearch = document.getElementById("globalSearch");
+    globalSearch.addEventListener("input", () => {
+      const term = globalSearch.value.trim().toLowerCase();
+      const activityView = document.getElementById("view-activity");
+      if (term && !activityView.classList.contains("active")) showView("activity");
+      document.querySelectorAll(".searchable-table tbody tr").forEach((row) => {
+        row.hidden = Boolean(term) && !row.textContent.toLowerCase().includes(term);
+      });
+    });
+
+    document.getElementById("chatForm").addEventListener("submit", (event) => {
+      event.preventDefault();
+      const input = document.getElementById("chatInput");
+      const question = input.value.trim();
+      if (!question) {
+        input.focus();
+        return;
+      }
+      const thread = document.getElementById("chatThread");
+      const userMessage = document.createElement("div");
+      userMessage.className = "chat-bubble user";
+      userMessage.textContent = question;
+      thread.append(userMessage);
+      const answer = document.createElement("div");
+      answer.className = "chat-bubble";
+      const label = document.createElement("strong");
+      label.textContent = "DataGuard AI";
+      const body = document.createElement("span");
+      body.textContent = "Your question is ready for DataGuard AI. Connect a live AI provider to receive an answer grounded in your company sources.";
+      answer.append(label, body);
+      thread.append(answer);
+      input.value = "";
+      thread.scrollTop = thread.scrollHeight;
+    });
+
+    const fileInput = document.getElementById("fileInput");
+    function chooseFiles() { fileInput.click(); }
+    document.getElementById("uploadButton").addEventListener("click", chooseFiles);
+    document.getElementById("uploadButtonSecondary").addEventListener("click", chooseFiles);
+    fileInput.addEventListener("change", () => {
+      const rows = document.getElementById("sourceRows");
+      Array.from(fileInput.files || []).forEach((file) => {
+        const row = document.createElement("tr");
+        const name = document.createElement("td");
+        const sourceName = document.createElement("span");
+        sourceName.className = "source-name";
+        const icon = document.createElement("span");
+        icon.className = "file-icon";
+        const fileSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        fileSvg.setAttribute("class", "icon");
+        const use = document.createElementNS("http://www.w3.org/2000/svg", "use");
+        use.setAttribute("href", "#i-file");
+        fileSvg.append(use);
+        icon.append(fileSvg);
+        const label = document.createElement("span");
+        label.textContent = file.name;
+        const subLabel = document.createElement("small");
+        subLabel.className = "table-secondary";
+        subLabel.textContent = "Uploaded by Tanya Puram";
+        label.append(subLabel);
+        sourceName.append(icon, label);
+        name.append(sourceName);
+        row.append(name, Object.assign(document.createElement("td"), { textContent: file.type || "Document" }), Object.assign(document.createElement("td"), { textContent: "Ready to index" }), Object.assign(document.createElement("td"), { textContent: "Just now" }));
+        const statusCell = document.createElement("td");
+        const status = document.createElement("span");
+        status.className = "status review";
+        status.textContent = "Added";
+        statusCell.append(status);
+        row.append(statusCell);
+        rows.prepend(row);
+      });
+      if (fileInput.files.length) showToast(`${fileInput.files.length} file${fileInput.files.length === 1 ? "" : "s"} added to this workspace.`);
+      fileInput.value = "";
+    });
+
+    document.querySelectorAll(".toggle").forEach((toggle) => toggle.addEventListener("click", () => {
+      const enabled = toggle.getAttribute("aria-pressed") !== "true";
+      toggle.setAttribute("aria-pressed", String(enabled));
+      showToast(`Protection policy ${enabled ? "enabled" : "paused"}.`);
+    }));
+    document.getElementById("settingsForm").addEventListener("submit", (event) => {
+      event.preventDefault();
+      showToast("Workspace profile changes saved.");
+    });
+    document.getElementById("exportButton").addEventListener("click", () => {
+      const csv = "Activity,Area,Status,Time,Actor\nAsked about business account opening,AI workspace,Protected,5 min ago,Tanya Puram\nBranch operations manual synced,Knowledge,Completed,1 hr ago,DataGuard\nCustomer account details redacted,Protection,Reviewed,Today 9:42 AM,Tanya Puram";
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+      link.download = "dataguard-activity.csv";
+      link.click();
+      URL.revokeObjectURL(link.href);
+      showToast("Activity log exported.");
+    });
+    document.querySelectorAll("[data-notice]").forEach((button) => button.addEventListener("click", () => showToast(button.dataset.notice)));
+  </script>
+</body>
+</html>
