@@ -61,19 +61,34 @@
     .nav-link .icon { width: 16px; height: 16px; flex: 0 0 auto; color: #7e8ba0; }
     .nav-link.active .icon { color: var(--blue); }
     .nav-link .nav-count { margin-left: auto; padding: 2px 6px; border-radius: 10px; color: #b34a50; background: var(--red-soft); font-size: 10px; font-weight: 700; }
-    .sidebar-profile { display: flex; min-height: 76px; align-items: center; gap: 10px; padding: 13px 17px; border-top: 1px solid var(--line); background: #fff; }
+    .sidebar-profile { position: relative; display: flex; min-height: 76px; align-items: center; gap: 10px; padding: 13px 17px; border-top: 1px solid var(--line); background: #fff; }
     .avatar { display: grid; width: 36px; height: 36px; flex: 0 0 auto; place-items: center; border-radius: 50%; color: #fff; background: linear-gradient(145deg, #cb5ad7, #8b5cf6); font-size: 12px; font-weight: 750; }
     .profile-copy { min-width: 0; flex: 1; }
     .profile-copy strong, .profile-copy small { display: block; }
     .profile-copy strong { overflow: hidden; color: var(--ink); font-size: 12px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
     .profile-copy small { margin-top: 3px; color: var(--muted); font-size: 10px; }
-    .profile-menu { border: 0; color: #8c98a9; background: transparent; cursor: pointer; }
+    .profile-trigger { display: flex; min-width: 0; flex: 1; align-items: center; gap: 10px; padding: 0; border: 0; color: inherit; background: transparent; cursor: pointer; text-align: left; }
+    .profile-trigger:focus-visible, .topbar-profile:focus-visible, .workspace-switcher:focus-visible { outline: 2px solid #7aa2fa; outline-offset: 2px; }
+    .profile-chevron { display: grid; width: 24px; height: 24px; flex: 0 0 auto; place-items: center; border: 0; color: #8c98a9; background: transparent; }
+    .profile-popover { position: fixed; z-index: 50; display: none; width: 260px; overflow: hidden; border: 1px solid #e5e9f1; border-radius: 12px; background: #fff; box-shadow: 0 12px 34px rgba(36,53,82,.16), 0 2px 8px rgba(36,53,82,.08); }
+    .profile-popover.open { display: block; animation: popover-in .14s ease-out; }
+    @keyframes popover-in { from { opacity: 0; transform: translateY(5px) scale(.985); } to { opacity: 1; transform: none; } }
+    .profile-popover-menu { display: grid; padding: 8px; }
+    .profile-menu-item { display: flex; width: 100%; min-height: 48px; align-items: center; gap: 12px; padding: 0 12px; border: 0; border-radius: 8px; color: #43546e; background: transparent; cursor: pointer; font-size: 13px; text-align: left; }
+    .profile-menu-item:hover { background: #f5f7fb; }
+    .profile-menu-item .icon { width: 20px; height: 20px; color: #586c92; }
+    .profile-menu-item.sign-out { color: #e34e56; }
+    .profile-menu-item.sign-out .icon { color: #e34e56; }
+    .profile-menu-account { display: flex; min-height: 70px; align-items: center; gap: 11px; padding: 12px 16px; border-top: 1px solid #edf0f5; background: #fff; }
+    .profile-menu-account strong, .profile-menu-account small { display: block; }
+    .profile-menu-account strong { color: var(--ink); font-size: 13px; }
+    .profile-menu-account small { margin-top: 4px; color: #8793a5; font-size: 11px; }
 
     .main { min-height: 100vh; margin-left: var(--sidebar-width); }
     .topbar { position: sticky; z-index: 10; top: 0; display: flex; height: 68px; align-items: center; justify-content: space-between; gap: 20px; padding: 0 32px; border-bottom: 1px solid var(--line); background: rgba(255,255,255,.94); backdrop-filter: blur(12px); }
     .topbar-left, .topbar-actions { display: flex; align-items: center; gap: 15px; }
     .mobile-menu { display: none; width: 36px; height: 36px; align-items: center; justify-content: center; border: 1px solid var(--line); border-radius: 8px; background: white; cursor: pointer; }
-    .workspace-switcher { display: flex; align-items: center; gap: 9px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+    .workspace-switcher { display: flex; align-items: center; gap: 9px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px; background: #fff; cursor: pointer; }
     .workspace-dot { width: 9px; height: 9px; border-radius: 3px; background: var(--blue); }
     .workspace-switcher strong { font-size: 11px; font-weight: 650; }
     .workspace-switcher .icon { width: 13px; height: 13px; color: #8491a4; }
@@ -329,10 +344,13 @@
     <symbol id="i-filter" viewBox="0 0 24 24"><path d="M4 5h16l-6 7v6l-4 2v-8L4 5Z"/></symbol>
     <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18m0-18a14 14 0 0 0 0 18"/></symbol>
     <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></symbol>
+    <symbol id="i-user-plus" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M3.5 20a7 7 0 0 1 11-5.8M18 11v7m-3.5-3.5h7"/></symbol>
+    <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.7 9a2.4 2.4 0 1 1 3.5 2.1c-1.2.6-1.2 1.4-1.2 2M12 17h.01"/></symbol>
+    <symbol id="i-signout" viewBox="0 0 24 24"><path d="M10 4H5v16h5m4-12 5 4-5 4m5-4H9"/></symbol>
   </svg>
   <div class="app-shell">
     <aside class="sidebar" id="sidebar" aria-label="Workspace navigation">
-      <a class="brand" href="#" aria-label="DataGuard workspace home">
+      <a class="brand" href="#" id="brandLink" aria-label="DataGuard workspace home">
         <span class="brand-mark"><svg class="icon"><use href="#i-shield"/></svg></span>
         <span class="brand-word">Data<span>Guard</span></span>
       </a>
@@ -364,9 +382,11 @@
         </div>
       </nav>
       <div class="sidebar-profile">
-        <span class="avatar" aria-hidden="true">TP</span>
-        <span class="profile-copy"><strong>Tanya Puram</strong><small>Pro plan · Workspace admin</small></span>
-        <button class="profile-menu" type="button" data-view="settings" aria-label="Open account settings"><svg class="icon"><use href="#i-chevron"/></svg></button>
+        <button class="profile-trigger" type="button" data-profile-trigger aria-haspopup="menu" aria-expanded="false" aria-label="Open profile menu">
+          <span class="avatar" aria-hidden="true">TP</span>
+          <span class="profile-copy"><strong>Tanya Puram</strong><small>Pro plan · Workspace admin</small></span>
+          <span class="profile-chevron"><svg class="icon"><use href="#i-chevron"/></svg></span>
+        </button>
       </div>
     </aside>
     <button class="overlay" id="overlay" type="button" aria-label="Close navigation"></button>
@@ -381,7 +401,9 @@
         </div>
         <div class="topbar-actions">
           <button class="icon-button" id="notificationButton" type="button" aria-label="Notifications"><svg class="icon"><use href="#i-bell"/></svg><span class="notification-dot"></span></button>
-          <span class="avatar topbar-avatar" aria-hidden="true">TP</span>
+          <button class="profile-trigger topbar-profile" type="button" data-profile-trigger aria-haspopup="menu" aria-expanded="false" aria-label="Open profile menu" style="flex:0 0 auto">
+            <span class="avatar topbar-avatar" aria-hidden="true">TP</span>
+          </button>
         </div>
       </header>
       <div class="content">
@@ -562,6 +584,17 @@
       </div>
     </main>
   </div>
+  <div class="profile-popover" id="profilePopover" role="menu" aria-label="Profile menu">
+    <div class="profile-popover-menu">
+      <button class="profile-menu-item" type="button" role="menuitem" data-profile-action="new-account"><svg class="icon"><use href="#i-user-plus"/></svg>New Account</button>
+      <button class="profile-menu-item" type="button" role="menuitem" data-profile-action="help"><svg class="icon"><use href="#i-help"/></svg>Help &amp; Support</button>
+      <button class="profile-menu-item sign-out" type="button" role="menuitem" data-profile-action="sign-out"><svg class="icon"><use href="#i-signout"/></svg>Sign Out</button>
+    </div>
+    <div class="profile-menu-account">
+      <span class="avatar" aria-hidden="true">TP</span>
+      <span><strong>Tanya Puram</strong><small>Pro Plan</small></span>
+    </div>
+  </div>
   <div class="toast" id="toast" role="status" aria-live="polite"><svg class="icon"><use href="#i-check"/></svg><span id="toastMessage">Done.</span></div>
   <script>
     const views = {
@@ -586,6 +619,7 @@
     const toast = document.getElementById("toast");
     const toastMessage = document.getElementById("toastMessage");
     const chatToolContext = document.getElementById("chatToolContext");
+    const profilePopover = document.getElementById("profilePopover");
     let toastTimer;
     let activeChatTool = "Knowledge assistant";
 
@@ -661,6 +695,60 @@
       menuToggle.setAttribute("aria-expanded", String(open));
     });
     overlay.addEventListener("click", closeMobileNav);
+    document.getElementById("brandLink").addEventListener("click", (event) => {
+      event.preventDefault();
+      showView("dashboard");
+    });
+    document.querySelector(".workspace-switcher").addEventListener("click", () => showToast("You are using the Puram Studio workspace."));
+    function closeProfileMenu() {
+      profilePopover.classList.remove("open");
+      document.querySelectorAll("[data-profile-trigger]").forEach((trigger) => trigger.setAttribute("aria-expanded", "false"));
+    }
+    function positionProfileMenu(trigger) {
+      const rect = trigger.getBoundingClientRect();
+      const width = profilePopover.offsetWidth || 260;
+      const menuHeight = profilePopover.scrollHeight || 260;
+      let left = rect.right - width;
+      let top = rect.bottom + 8;
+      if (window.innerWidth <= 860 && !trigger.classList.contains("topbar-profile")) {
+        left = 12;
+        top = Math.max(12, rect.top - menuHeight - 8);
+      } else {
+        left = Math.max(12, rect.right - width);
+        top = Math.max(12, rect.bottom + 8);
+        if (top + menuHeight > window.innerHeight - 12) top = Math.max(12, rect.top - menuHeight - 8);
+      }
+      profilePopover.style.left = `${left}px`;
+      profilePopover.style.top = `${top}px`;
+    }
+    document.querySelectorAll("[data-profile-trigger]").forEach((trigger) => {
+      trigger.addEventListener("click", (event) => {
+        event.stopPropagation();
+        const willOpen = !profilePopover.classList.contains("open");
+        closeProfileMenu();
+        if (willOpen) {
+          profilePopover.classList.add("open");
+          trigger.setAttribute("aria-expanded", "true");
+          positionProfileMenu(trigger);
+          profilePopover.querySelector("[role='menuitem']").focus();
+        }
+      });
+    });
+    profilePopover.addEventListener("click", (event) => event.stopPropagation());
+    document.addEventListener("click", closeProfileMenu);
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") closeProfileMenu();
+    });
+    window.addEventListener("resize", closeProfileMenu);
+    document.querySelectorAll("[data-profile-action]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const action = button.dataset.profileAction;
+        closeProfileMenu();
+        if (action === "new-account") showToast("New account setup opened.");
+        if (action === "help") showToast("Help & Support is ready.");
+        if (action === "sign-out") showToast("Signed out safely.");
+      });
+    });
     document.getElementById("notificationButton").addEventListener("click", () => showView("protection"));
     document.getElementById("dateButton").addEventListener("click", () => showToast("Showing workspace activity from the last 7 days."));
 
@@ -746,6 +834,16 @@
     }));
     document.getElementById("settingsForm").addEventListener("submit", (event) => {
       event.preventDefault();
+      const name = document.getElementById("profileName").value.trim() || "Tanya Puram";
+      const firstName = name.split(/\s+/)[0];
+      const initials = name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0].toUpperCase()).join("");
+      document.querySelectorAll(".avatar").forEach((avatar) => {
+        avatar.textContent = initials || "TP";
+      });
+      document.querySelectorAll(".sidebar-profile .profile-copy strong").forEach((copy) => copy.textContent = name);
+      document.querySelectorAll(".profile-menu-account strong").forEach((copy) => copy.textContent = name);
+      pageTitle.textContent = `Good morning, ${firstName}`;
+      views.dashboard[0] = `Good morning, ${firstName}`;
       showToast("Workspace profile changes saved.");
     });
     document.getElementById("exportButton").addEventListener("click", () => {
